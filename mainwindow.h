@@ -36,6 +36,9 @@ public slots: // Слоты
     void removeStudent();
     // ПОИСК
     void findStudent();
+    // Работа с файлами
+    void saveToFile();
+    void loadFromFile();
 
 
 private:

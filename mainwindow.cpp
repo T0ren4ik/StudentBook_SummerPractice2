@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include<QDebug>
-QAction *findButton;
+
+QAction *findButton; // как обойтись без такого обьявления?????????????
+
 // Добавление
 void StudentBook::addStudent()
 {
@@ -83,7 +85,6 @@ void StudentBook::next()
     courseLine->setText(QString::number(i.value().first));
     groupLine->setText(QString::number(i.value().second));
 }
-
 void StudentBook::previous()
 {
     QString name = nameLine->text();
@@ -115,7 +116,6 @@ void StudentBook::editStudent()
 
     updateInterface(EditingMode);
 }
-
 void StudentBook::removeStudent()
 {
     QString name = nameLine->text();
@@ -219,6 +219,58 @@ void StudentBook::findStudent()
      updateInterface(NavigationMode);
  }
 
+// работа с файлами
+void StudentBook::saveToFile()
+{
+// выводит на экране модальный диалог выбора файла
+QString fileName = QFileDialog::getSaveFileName(this,
+    tr("Save Address Book"), "",
+    tr("Address Book (*.abk);;All Files (*)"));
+
+    if (fileName.isEmpty())
+        return;
+    else {
+        QFile file(fileName);
+        if (!file.open(QIODevice::WriteOnly)) {
+            QMessageBox::information(this, tr("Unable to open file"), file.errorString());
+            return;
+        }
+
+    QDataStream out(&file);
+    out.setVersion(QDataStream::Qt_6_3);
+    out << student;
+    }
+}
+void StudentBook::loadFromFile()
+{
+    QString fileName = QFileDialog::getOpenFileName(this,
+        tr("Open Address Book"), "",
+        tr("Address Book (*.abk);;All Files (*)"));
+    if (fileName.isEmpty())
+        return;
+    else {
+        QFile file(fileName);
+        if (!file.open(QIODevice::ReadOnly)) {
+            QMessageBox::information(this, tr("Unable to open file"),
+                file.errorString());
+            return;
+        }
+        QDataStream in(&file);
+        in.setVersion(QDataStream::Qt_6_3);
+        student.empty();   // очистка существующих контактов
+        in >> student;
+        if (student.isEmpty()) {
+            QMessageBox::information(this, tr("No contacts in file"),
+                tr("The file you are attempting to open contains no contacts."));
+        } else {
+            BookEl::iterator i = student.begin();
+            nameLine->setText(i.key());
+            courseLine->setText(QString::number(i.value().first));
+            groupLine->setText(QString::number(i.value().second));
+        }
+    }
+    updateInterface(NavigationMode);
+}
 
 // Конструктор
 StudentBook::StudentBook(QWidget *parent)
@@ -267,16 +319,26 @@ StudentBook::StudentBook(QWidget *parent)
     mainMenu->addMenu(helpMenu);
 
 
-    // Выход
-    QAction *quit = new QAction("&Quit", this);
-    fileMenu->addAction(quit);
-    connect(quit, &QAction::triggered, qApp, QApplication::quit);
-
     // Поиск
     dialog = new FindDialog;
     findButton = new QAction("&Search", this);
     fileMenu->addAction(findButton);
     findButton->setEnabled(false);
+
+    // Работа с файлами
+    QAction *loadButton = new QAction("&Open...", this);
+    fileMenu->addAction(loadButton);
+    QAction *saveButton = new QAction("&Save...", this);
+    fileMenu->addAction(saveButton);
+    // Подсказки
+    loadButton->setToolTip(tr("Load contacts from a file"));
+    saveButton->setToolTip(tr("Save contacts to a file"));
+
+    // Выход + разделитель
+    fileMenu->addSeparator();
+    QAction *quit = new QAction("&Quit", this);
+    fileMenu->addAction(quit);
+    connect(quit, &QAction::triggered, qApp, QApplication::quit);
 
     mainLayout->setMenuBar(mainMenu);
     //================= Меню ========================
@@ -305,8 +367,11 @@ StudentBook::StudentBook(QWidget *parent)
     // Изменение
     connect(editButton, SIGNAL(clicked()), this, SLOT(editStudent()));
     connect(removeButton, SIGNAL(clicked()), this, SLOT(removeStudent()));
-    // поиск
+    // Поиск
     connect(findButton, SIGNAL(triggered()), this, SLOT(findStudent()));
+    // Работа с файлами
+    connect(loadButton, SIGNAL(triggered()), this, SLOT(loadFromFile()));
+    connect(saveButton, SIGNAL(triggered()), this, SLOT(saveToFile()));
 
     // Распологаем кнопки
     // добавления
