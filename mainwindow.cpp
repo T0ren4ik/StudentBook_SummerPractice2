@@ -272,6 +272,14 @@ void StudentBook::loadFromFile()
     updateInterface(NavigationMode);
 }
 
+// Показать данные в виде таблицы
+void StudentBook::tableStudent()
+{
+    table->show();
+    table->createT(student);
+    this->setWindowTitle("Table Students");
+}
+
 // Конструктор
 StudentBook::StudentBook(QWidget *parent)
     : QWidget(parent)
@@ -334,6 +342,11 @@ StudentBook::StudentBook(QWidget *parent)
     loadButton->setToolTip(tr("Load contacts from a file"));
     saveButton->setToolTip(tr("Save contacts to a file"));
 
+    // Показатьь в виде таблице
+    table = new TableDialoge;
+    QAction *tableButton = new QAction("&Table", this);
+    fileMenu->addAction(tableButton);
+
     // Выход + разделитель
     fileMenu->addSeparator();
     QAction *quit = new QAction("&Quit", this);
@@ -372,6 +385,8 @@ StudentBook::StudentBook(QWidget *parent)
     // Работа с файлами
     connect(loadButton, SIGNAL(triggered()), this, SLOT(loadFromFile()));
     connect(saveButton, SIGNAL(triggered()), this, SLOT(saveToFile()));
+    // Показать в виде таблицы
+    connect(tableButton, SIGNAL(triggered()), this, SLOT(tableStudent()));
 
     // Распологаем кнопки
     // добавления

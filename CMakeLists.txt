@@ -20,6 +20,8 @@ set(PROJECT_SOURCES
         mainwindow.h
         FindDialog.h
         FindDialog.cpp
+        TableDialog.h
+        TableDialog.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

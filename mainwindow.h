@@ -1,5 +1,7 @@
 #pragma once
 #include "FindDialog.h"
+#include "TableDialog.h"
+
 #include <QtWidgets>
 #include <QMainWindow>
 #include <QApplication>
@@ -39,6 +41,8 @@ public slots: // Слоты
     // Работа с файлами
     void saveToFile();
     void loadFromFile();
+    // Создание таблицы
+    void tableStudent();
 
 
 private:
@@ -66,5 +70,6 @@ private:
     IntPair oldInf; // Отображаемая информация
     FindDialog *dialog; // Поиск
     Mode currentMode; // Режим работы приоложения
+    TableDialoge* table; // Вывод в виде таблицы
 };
 
