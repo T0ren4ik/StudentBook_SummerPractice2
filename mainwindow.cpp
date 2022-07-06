@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include<QDebug>
 
-QAction *findButton; // как обойтись без такого обьявления?????????????
+QAction *findButton;
 
 // Добавление
 void StudentBook::addStudent()
@@ -18,18 +18,19 @@ void StudentBook::addStudent()
     //разрешаем изменять и даем фокус
     updateInterface(AddingMode);
 }
-
 void StudentBook::submitStudent()
 {
+    // Считываем данные
     QString name = nameLine->text();
     IntPair Inf = qMakePair(courseLine->text().toInt(), groupLine->text().toInt());
 
+    // Проверяем что поля заполнены
     if (name == "" || Inf.first == 0 ||  Inf.second == 0) {
         QMessageBox::information(this, tr("Empty Field"),
             tr("Please enter a name, course and group."));
         return;
     }
-    if (currentMode == AddingMode) {
+    if (currentMode == AddingMode) { // Если это добавление
     if (!student.contains(name)) {
         student.insert(name, Inf);
         QMessageBox::information(this, tr("Add Successful"),
@@ -38,68 +39,74 @@ void StudentBook::submitStudent()
         QMessageBox::information(this, tr("Add Unsuccessful"),
             tr("Sorry, \"%1\" is already in your address book.").arg(name));
         return;
+           }
     }
-    } else if (currentMode == EditingMode) {
+    else if (currentMode == EditingMode) { // Если изменение
         if (!student.contains(name)) {
             QMessageBox::information(this, tr("Edit Successful"),
                 tr("\"%1\" has been edited in your address book.").arg(oldName));
             student.remove(oldName);
             student.insert(name, Inf);
-        } else {
+        }
+        else if (oldInf != Inf) {
+            QMessageBox::information(this, tr("Edit Successful"),
+                tr("\"%1\" has been edited in your address book.").arg(name));
+            student[name] = Inf;
+        }
+        else {
             QMessageBox::information(this, tr("Edit Unsuccessful"),
                 tr("Sorry, \"%1\" is already in your address book.").arg(name));
             return;
         }
-    } else if (oldInf != Inf) {
-        QMessageBox::information(this, tr("Edit Successful"),
-            tr("\"%1\" has been edited in your address book.").arg(name));
-        student[name] = Inf;
     }
-
-
-    updateInterface(NavigationMode);
+    updateInterface(NavigationMode); // Включаем навигацию
 }
-
 void StudentBook::cancel()
 {
+    // Просто ставим старые значения
     nameLine->setText(oldName);   
     courseLine->setText(QString::number(oldInf.first));
     groupLine->setText(QString::number(oldInf.second));
 
-    updateInterface(NavigationMode);
+    updateInterface(NavigationMode); // Мод навигации
 }
 
 // Навигация
 void StudentBook::next()
 {
+    // Получаем итеротор
     QString name = nameLine->text();
     BookEl::iterator i = student.find(name);
 
+    // Передвигаем
     if (i != student.end())
         i++;
-
     if (i == student.end())
         i = student.begin();
 
+    // Set Text
     nameLine->setText(i.key());
     courseLine->setText(QString::number(i.value().first));
     groupLine->setText(QString::number(i.value().second));
 }
 void StudentBook::previous()
 {
+    // Получаем итеротор
     QString name = nameLine->text();
     BookEl::iterator i = student.find(name);
 
-    if (i == student.end()){
+    // Передвигаем
+    if (i == student.end())
+    {
         nameLine->clear();
         courseLine->clear();
         groupLine->clear();
         return;
     }
-
     if (i == student.begin())
         i = student.end();
 
+    // Set Text
     i--;
     nameLine->setText(i.key());
     courseLine->setText(QString::number(i.value().first));
@@ -117,23 +124,18 @@ void StudentBook::editStudent()
     updateInterface(EditingMode);
 }
 void StudentBook::removeStudent()
-{
+{ // Проверяем наличие, уточняем и удаляем
     QString name = nameLine->text();
-    //IntPair Inf = qMakePair(courseLine->text().toInt(), groupLine->text().toInt());
-
 
     if (student.contains(name)) {
-
         int button = QMessageBox::question(this,
             tr("Confirm Remove"),
             tr("Are you sure you want to remove \"%1\"?").arg(name),
             QMessageBox::Yes | QMessageBox::No);
 
         if (button == QMessageBox::Yes) {
-
             previous();
             student.remove(name);
-
             QMessageBox::information(this, tr("Remove Successful"),
                 tr("\"%1\" has been removed from your address book.").arg(name));
         }
@@ -144,14 +146,13 @@ void StudentBook::removeStudent()
 
 // Изменение работы интерфейса
 void StudentBook::updateInterface(Mode mode)
- {
+ { // Просто устанавливаем нужные параметры
     currentMode = mode;
 
     switch (currentMode) {
 
     case AddingMode:
     case EditingMode:
-
         nameLine->setReadOnly(false);
         nameLine->setFocus(Qt::OtherFocusReason);
         courseLine->setReadOnly(false);
@@ -170,7 +171,6 @@ void StudentBook::updateInterface(Mode mode)
         break;
 
     case NavigationMode:
-
         if (student.isEmpty()) {
          nameLine->clear();
          courseLine->clear();
@@ -246,15 +246,15 @@ void StudentBook::loadFromFile()
     QString fileName = QFileDialog::getOpenFileName(this,
         tr("Open Address Book"), "",
         tr("Address Book (*.abk);;All Files (*)"));
-    if (fileName.isEmpty())
-        return;
-    else {
-        QFile file(fileName);
-        if (!file.open(QIODevice::ReadOnly)) {
-            QMessageBox::information(this, tr("Unable to open file"),
-                file.errorString());
+        if (fileName.isEmpty())
             return;
-        }
+        else {
+            QFile file(fileName);
+            if (!file.open(QIODevice::ReadOnly)) {
+                QMessageBox::information(this, tr("Unable to open file"),
+                    file.errorString());
+                return;
+            }
         QDataStream in(&file);
         in.setVersion(QDataStream::Qt_6_3);
         student.empty();   // очистка существующих контактов

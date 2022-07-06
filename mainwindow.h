@@ -9,11 +9,12 @@
 #include <QMap>
 #include <QPair>
 
-
+// Используемые классы
 class QLabel;
 class QLineEdit;
 class QPushButton;
 
+// Библиотека
 typedef QPair<int, int> IntPair;
 typedef QMap<QString, IntPair> BookEl;
 
